@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int      @id @default(autoincrement())
+  firstName       String
+  lastName        String
+  email           String   @unique
+  password        String
+  phone           String?
+  role            UserRole @default(CLIENT)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relaciones
+  businessAccount Business? @relation(fields: [businessAccountId], references: [id])
+  businessAccountId Int?
+
+  // Relación opcional con ActivityLog para registrar actividades
+  activityLogs    ActivityLog[]
+}
+
+
+enum UserRole {
+  CLIENT
+  BUSINESS
+}
+
+model Business {
+  id              Int      @id @default(autoincrement())
+  businessName    String
+  legalName       String
+  rut             String   @unique
+  contactName     String
+  contactPhone    String
+  contactEmail    String
+  businessType    BusinessType
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relación con User
+  ownerId         Int
+  owner           User     @relation(fields: [ownerId], references: [id])
+}
+
+enum BusinessType {
+  CASUAL
+  ENTREPRENEUR
+  SME
+  FORMAL
+}
+
+model Product {
+  id              Int      @id @default(autoincrement())
+  name            String
+  description     String
+  price           Float
+  stock           Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relación con Business
+  businessId      Int
+  business        Business @relation(fields: [businessId], references: [id])
+}
+
+model Service {
+  id              Int      @id @default(autoincrement())
+  name            String
+  description     String
+  price           Float
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relación con Business
+  businessId      Int
+  business        Business @relation(fields: [businessId], references: [id])
+}
+
+model ActivityLog {
+  id          Int      @id @default(autoincrement())
+  action      String
+  description String
+  userId      Int
+  createdAt   DateTime @default(now())
+
+  // Relación con User
+  user        User     @relation(fields: [userId], references: [id])
+}
